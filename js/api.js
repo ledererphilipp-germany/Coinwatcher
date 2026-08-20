@@ -98,23 +98,44 @@ export async function fetchMarketChart(coinId, currency = 'eur', days = 7) {
   };
 }
 
-const NEWS_API = 'https://min-api.cryptocompare.com/data/v2/news/';
+const NEWS_APIS = [
+  {
+    url: 'https://min-api.cryptocompare.com/data/v2/news/?categories=BTC,XRP&excludeCategories=Sponsored&lang=EN',
+    parse: data => (data.Data || []).slice(0, 10).map(item => ({
+      title: item.title,
+      body: item.body?.substring(0, 150),
+      url: item.url,
+      image: item.imageurl,
+      source: item.source_info?.name || item.source,
+      categories: item.categories?.split('|') || [],
+      publishedAt: item.published_on * 1000,
+    })),
+  },
+  {
+    url: 'https://api.coinstats.app/public/v1/news?skip=0&limit=10',
+    parse: data => (data.news || data || []).slice(0, 10).map(item => ({
+      title: item.title,
+      body: item.description?.substring(0, 150) || '',
+      url: item.link || item.url,
+      image: item.imgURL || item.imgUrl || item.thumbnail,
+      source: item.source,
+      categories: item.coins?.map(c => c.coinNameId?.toUpperCase()) || [],
+      publishedAt: new Date(item.feedDate || item.date).getTime(),
+    })),
+  },
+];
 
 export async function fetchNews() {
-  const data = await cachedFetch(
-    'news',
-    `${NEWS_API}?categories=BTC,XRP&excludeCategories=Sponsored&lang=EN`,
-    900000
-  );
-  return (data.Data || []).slice(0, 10).map(item => ({
-    title: item.title,
-    body: item.body?.substring(0, 150),
-    url: item.url,
-    image: item.imageurl,
-    source: item.source_info?.name || item.source,
-    categories: item.categories?.split('|') || [],
-    publishedAt: item.published_on * 1000,
-  }));
+  for (const api of NEWS_APIS) {
+    try {
+      const res = await fetch(api.url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const news = api.parse(data);
+      if (news.length > 0) return news;
+    } catch {}
+  }
+  return [];
 }
 
 export function connectLiveUpdates(onUpdate) {

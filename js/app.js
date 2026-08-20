@@ -134,7 +134,9 @@ async function refresh() {
     renderInsights();
     renderLastUpdate();
 
-    fetchNews().then(renderNews).catch(() => {});
+    fetchNews().then(renderNews).catch(() => {
+      $('#news-list').innerHTML = '<div class="news-placeholder">Nachrichten konnten nicht geladen werden.</div>';
+    });
   } catch (err) {
     state.error = err.message;
     state.loading = false;
