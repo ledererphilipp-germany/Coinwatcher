@@ -98,6 +98,25 @@ export async function fetchMarketChart(coinId, currency = 'eur', days = 7) {
   };
 }
 
+const NEWS_API = 'https://min-api.cryptocompare.com/data/v2/news/';
+
+export async function fetchNews() {
+  const data = await cachedFetch(
+    'news',
+    `${NEWS_API}?categories=BTC,XRP&excludeCategories=Sponsored&lang=EN`,
+    900000
+  );
+  return (data.Data || []).slice(0, 10).map(item => ({
+    title: item.title,
+    body: item.body?.substring(0, 150),
+    url: item.url,
+    image: item.imageurl,
+    source: item.source_info?.name || item.source,
+    categories: item.categories?.split('|') || [],
+    publishedAt: item.published_on * 1000,
+  }));
+}
+
 export function connectLiveUpdates(onUpdate) {
   const streams = COIN_IDS.map(id => `${SYMBOLS[id].symbol.toLowerCase()}@ticker`).join('/');
   let ws;

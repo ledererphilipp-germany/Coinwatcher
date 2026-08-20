@@ -1,4 +1,4 @@
-import { fetchMarkets, fetchMarketChart, connectLiveUpdates, COINS, COIN_IDS } from './api.js';
+import { fetchMarkets, fetchMarketChart, fetchNews, connectLiveUpdates, COINS, COIN_IDS } from './api.js';
 import { PriceChart, RSIGauge } from './charts.js';
 import { calculateAll } from './indicators.js';
 import { generateInsights } from './insights.js';
@@ -133,6 +133,8 @@ async function refresh() {
     renderIndicators();
     renderInsights();
     renderLastUpdate();
+
+    fetchNews().then(renderNews).catch(() => {});
   } catch (err) {
     state.error = err.message;
     state.loading = false;
@@ -311,6 +313,54 @@ function renderError() {
   $('#error-banner').textContent = msg;
   $('#error-banner').classList.add('visible');
   setTimeout(() => $('#error-banner').classList.remove('visible'), 8000);
+}
+
+function renderNews(news) {
+  const container = $('#news-list');
+  if (!news || !news.length) {
+    container.innerHTML = '<div class="news-placeholder">Keine Nachrichten verfügbar.</div>';
+    return;
+  }
+
+  container.innerHTML = news.map(item => {
+    const tags = (item.categories || [])
+      .filter(c => c && c !== 'N/A')
+      .slice(0, 3)
+      .map(c => {
+        const cl = c.toUpperCase().includes('BTC') || c.toUpperCase().includes('BITCOIN') ? 'btc'
+          : c.toUpperCase().includes('XRP') || c.toUpperCase().includes('RIPPLE') ? 'xrp' : '';
+        return `<span class="news-tag ${cl}">${c}</span>`;
+      }).join('');
+
+    const thumb = item.image
+      ? `<img class="news-thumb" src="${item.image}" alt="" loading="lazy">`
+      : '';
+
+    return `<a class="news-item" href="${item.url}" target="_blank" rel="noopener">
+      ${thumb}
+      <div class="news-body">
+        <div class="news-title">${item.title}</div>
+        <div class="news-snippet">${item.body || ''}</div>
+        <div class="news-meta">
+          <span class="news-source">${item.source || ''}</span>
+          <span>${timeAgo(item.publishedAt)}</span>
+        </div>
+        ${tags ? `<div class="news-tags">${tags}</div>` : ''}
+      </div>
+    </a>`;
+  }).join('');
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Gerade eben';
+  if (mins < 60) return `vor ${mins} Min.`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `vor ${hrs} Std.`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'vor 1 Tag';
+  return `vor ${days} Tagen`;
 }
 
 function renderLastUpdate() {

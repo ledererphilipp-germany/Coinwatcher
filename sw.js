@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coinwatcher-v3';
+const CACHE_NAME = 'coinwatcher-v4';
 const STATIC_ASSETS = [
   './',
   'index.html',
@@ -31,7 +31,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  if (url.origin === 'https://api.binance.com') {
+  if (url.origin === 'https://api.binance.com' || url.origin === 'https://min-api.cryptocompare.com') {
     e.respondWith(
       fetch(e.request)
         .then(res => {
