@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coinwatcher-v1';
+const CACHE_NAME = 'coinwatcher-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -31,7 +31,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  if (url.origin === 'https://api.coingecko.com') {
+  if (url.origin === 'https://api.binance.com') {
     e.respondWith(
       fetch(e.request)
         .then(res => {

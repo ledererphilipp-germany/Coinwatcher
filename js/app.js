@@ -1,10 +1,9 @@
-import { fetchMarkets, fetchMarketChart, COINS, COIN_IDS, setApiKey, getApiKey } from './api.js';
+import { fetchMarkets, fetchMarketChart, connectLiveUpdates, COINS, COIN_IDS } from './api.js';
 import { PriceChart, RSIGauge } from './charts.js';
 import { calculateAll } from './indicators.js';
 import { generateInsights } from './insights.js';
 
 const TIMEFRAMES = { '24h': 1, '7T': 7, '30T': 30, '90T': 90, '1J': 365 };
-const COIN_COLORS = { bitcoin: '#F7931A', ripple: '#00AAE4' };
 const COIN_SYMBOLS = { bitcoin: 'BTC', ripple: 'XRP' };
 
 let state = {
@@ -16,10 +15,11 @@ let state = {
   indicators: {},
   loading: true,
   error: null,
+  live: false,
 };
 
 let chart, rsiGauge;
-let refreshTimer;
+let chartRefreshTimer;
 
 function $(sel) { return document.querySelector(sel); }
 function $$(sel) { return document.querySelectorAll(sel); }
@@ -43,20 +43,56 @@ export async function init() {
     chart.render();
   });
 
-  const settingsBtn = $('#settings-btn');
-  const settingsPanel = $('#settings-panel');
-  settingsBtn.addEventListener('click', () => {
-    settingsPanel.classList.toggle('open');
-  });
-  $('#api-key-input').value = getApiKey();
-  $('#save-api-key').addEventListener('click', () => {
-    setApiKey($('#api-key-input').value.trim());
-    settingsPanel.classList.remove('open');
-    refresh();
-  });
-
   await refresh();
-  refreshTimer = setInterval(refresh, 60000);
+
+  connectLiveUpdates(handleLiveUpdate);
+  chartRefreshTimer = setInterval(refreshChartData, 300000);
+}
+
+function handleLiveUpdate(coinId, data) {
+  if (!coinId) {
+    state.live = !!data.connected;
+    renderConnectionStatus();
+    return;
+  }
+
+  if (!state.marketsData) return;
+  const coin = state.marketsData.find(c => c.id === coinId);
+  if (!coin) return;
+
+  Object.assign(coin, data);
+  updateCoinCard(coin);
+  renderLastUpdate();
+}
+
+function updateCoinCard(coin) {
+  const card = $(`.coin-card[data-coin="${coin.id}"]`);
+  if (!card) return;
+
+  const priceEl = card.querySelector('.coin-price');
+  priceEl.textContent = fmtEur(coin.current_price);
+  priceEl.classList.remove('loading');
+
+  const pct = coin.price_change_percentage_24h;
+  const changeEl = card.querySelector('.coin-change');
+  changeEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+  changeEl.className = 'coin-change ' + (pct >= 0 ? 'positive' : 'negative');
+
+  card.querySelector('.stat-vol').textContent = fmtCompact(coin.total_volume);
+  card.querySelector('.stat-high').textContent = fmtEur(coin.high_24h);
+  card.querySelector('.stat-low').textContent = fmtEur(coin.low_24h);
+  card.querySelector('.stat-mcap').textContent = fmtCompact(coin.market_cap);
+}
+
+function renderConnectionStatus() {
+  const el = $('#live-indicator');
+  if (state.live) {
+    el.className = 'live-indicator connected';
+    el.title = 'Live-Verbindung aktiv';
+  } else {
+    el.className = 'live-indicator';
+    el.title = 'Verbindung getrennt';
+  }
 }
 
 function initTheme() {
@@ -104,6 +140,15 @@ async function refresh() {
   }
 }
 
+async function refreshChartData() {
+  try {
+    await loadChartData(state.selectedCoin, TIMEFRAMES[state.selectedTimeframe]);
+    renderChart();
+    renderIndicators();
+    renderInsights();
+  } catch {}
+}
+
 async function loadChartData(coinId, days) {
   const data = await fetchMarketChart(coinId, 'eur', days);
   state.chartTimestamps[coinId] = data.prices.map(p => p[0]);
@@ -132,27 +177,12 @@ function selectTimeframe(tf) {
 
 function renderDashboard() {
   if (!state.marketsData) return;
-
   for (const coin of state.marketsData) {
+    updateCoinCard(coin);
     const card = $(`.coin-card[data-coin="${coin.id}"]`);
     if (!card) continue;
-
-    const priceEl = card.querySelector('.coin-price');
-    priceEl.textContent = fmtEur(coin.current_price);
-    priceEl.classList.remove('loading');
-
-    const pct = coin.price_change_percentage_24h;
-    const changeEl = card.querySelector('.coin-change');
-    changeEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
-    changeEl.className = 'coin-change ' + (pct >= 0 ? 'positive' : 'negative');
-
-    card.querySelector('.stat-mcap').textContent = fmtCompact(coin.market_cap);
-    card.querySelector('.stat-vol').textContent = fmtCompact(coin.total_volume);
-    card.querySelector('.stat-high').textContent = fmtEur(coin.high_24h);
-    card.querySelector('.stat-low').textContent = fmtEur(coin.low_24h);
-
     const sparkline = coin.sparkline_in_7d?.price;
-    if (sparkline) renderSparkline(card.querySelector('.sparkline'), sparkline, pct >= 0);
+    if (sparkline) renderSparkline(card.querySelector('.sparkline'), sparkline, coin.price_change_percentage_24h >= 0);
   }
 }
 
@@ -286,7 +316,7 @@ function renderError() {
 function renderLastUpdate() {
   const now = new Date();
   $('#last-update').textContent =
-    `Aktualisiert: ${now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
+    `Aktualisiert: ${now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
 }
 
 function fmtEur(val) {

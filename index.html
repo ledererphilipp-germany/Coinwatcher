@@ -36,20 +36,16 @@
         <span class="app-title">Coinwatcher</span>
       </div>
       <div class="header-right">
+        <div class="live-indicator" id="live-indicator" title="Verbindung wird hergestellt...">
+          <span class="live-dot"></span>
+          <span class="live-text">Live</span>
+        </div>
         <span id="last-update"></span>
         <button class="icon-btn" id="theme-toggle" aria-label="Farbschema wechseln">
           <span id="theme-icon">☾</span>
         </button>
-        <button class="icon-btn" id="settings-btn" aria-label="Einstellungen">⚙</button>
       </div>
     </header>
-
-    <div class="settings-panel" id="settings-panel">
-      <label for="api-key-input">CoinGecko API-Schlüssel (optional)</label>
-      <input type="text" id="api-key-input" placeholder="CG-xxxxxxxxxx">
-      <p class="hint">Kostenloser Demo-Schlüssel von coingecko.com/de/api — verbessert die Zuverlässigkeit.</p>
-      <button class="btn-primary" id="save-api-key">Speichern</button>
-    </div>
 
     <div class="error-banner" id="error-banner"></div>
 
@@ -179,6 +175,10 @@
         </div>
       </div>
     </section>
+
+    <footer class="app-footer">
+      Datenquelle: Binance · Marktkapitalisierung geschätzt
+    </footer>
 
   </div>
 
