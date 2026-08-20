@@ -1,0 +1,516 @@
+:root {
+  --bg: #f5f5fa;
+  --surface: #ffffff;
+  --surface-hover: #f0f0f5;
+  --text: #1a1a2e;
+  --text-secondary: rgba(26,26,46,0.55);
+  --border: rgba(0,0,0,0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,0.08);
+  --positive: #00C853;
+  --negative: #FF3D00;
+  --btc: #F7931A;
+  --xrp: #00AAE4;
+  --accent: #6C63FF;
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f0f1e;
+    --surface: #1a1a2e;
+    --surface-hover: #252540;
+    --text: #e8e8f0;
+    --text-secondary: rgba(232,232,240,0.5);
+    --border: rgba(255,255,255,0.06);
+    --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+    --shadow-lg: 0 4px 20px rgba(0,0,0,0.3);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f0f1e;
+  --surface: #1a1a2e;
+  --surface-hover: #252540;
+  --text: #e8e8f0;
+  --text-secondary: rgba(232,232,240,0.5);
+  --border: rgba(255,255,255,0.06);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  margin-bottom: 16px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-left svg { width: 32px; height: 32px; }
+
+.app-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#last-update {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.icon-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text);
+  transition: background 0.15s;
+}
+
+.icon-btn:hover { background: var(--surface-hover); }
+
+/* Settings panel */
+.settings-panel {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-lg);
+}
+
+.settings-panel.open { display: block; }
+
+.settings-panel label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.settings-panel input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.settings-panel .hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Error banner */
+.error-banner {
+  display: none;
+  background: rgba(255,61,0,0.1);
+  border: 1px solid rgba(255,61,0,0.2);
+  color: var(--negative);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.error-banner.visible { display: block; }
+
+/* Coin cards */
+.coins-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.coin-card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.coin-card:hover { box-shadow: var(--shadow); }
+
+.coin-card.active[data-coin="bitcoin"] { border-color: var(--btc); box-shadow: 0 0 0 1px var(--btc), var(--shadow); }
+.coin-card.active[data-coin="ripple"] { border-color: var(--xrp); box-shadow: 0 0 0 1px var(--xrp), var(--shadow); }
+
+.coin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.coin-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coin-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff;
+}
+
+.coin-icon.btc { background: var(--btc); }
+.coin-icon.xrp { background: var(--xrp); }
+
+.coin-label {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.coin-symbol {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.coin-price {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.coin-price.loading {
+  background: linear-gradient(90deg, var(--surface-hover) 25%, var(--surface) 50%, var(--surface-hover) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+  color: transparent;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.coin-change {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.coin-change.positive { color: var(--positive); }
+.coin-change.negative { color: var(--negative); }
+
+.sparkline-wrap {
+  height: 40px;
+  margin-bottom: 12px;
+}
+
+.sparkline {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.coin-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.stat {
+  font-size: 11px;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+}
+
+.stat-value {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Chart section */
+.chart-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+
+.chart-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#chart-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tf-buttons {
+  display: flex;
+  gap: 2px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+
+.tf-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tf-btn.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.sma-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.sma-toggle input { accent-color: var(--accent); }
+
+.chart-wrap {
+  height: 320px;
+  position: relative;
+}
+
+.chart-wrap canvas {
+  display: block;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Indicators section */
+.indicators-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.indicator-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.indicator-title {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.rsi-wrap {
+  height: 48px;
+}
+
+.rsi-wrap canvas { display: block; }
+
+#rsi-value {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.trend-label {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.trend-label.bullish { color: var(--positive); }
+.trend-label.bearish { color: var(--negative); }
+.trend-label.neutral { color: var(--text-secondary); }
+
+.sma-values {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.sma-item {
+  font-size: 12px;
+}
+
+.sma-item .label { color: var(--text-secondary); }
+.sma-item .val { font-weight: 600; }
+
+.macd-signal {
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.macd-signal.bullish { color: var(--positive); }
+.macd-signal.bearish { color: var(--negative); }
+
+/* Insights section */
+.insights-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.insights-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.insight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.insight-item:last-child { border-bottom: none; }
+
+.insight-icon { font-size: 16px; flex-shrink: 0; line-height: 1.5; }
+
+.insight-item.bullish .insight-text { color: var(--positive); }
+.insight-item.bearish .insight-text { color: var(--negative); }
+.insight-item.warning .insight-text { color: #FFC107; }
+.insight-item.opportunity .insight-text { color: var(--positive); }
+
+/* Responsive */
+@media (max-width: 700px) {
+  .coins-grid { grid-template-columns: 1fr; }
+  .indicators-section { grid-template-columns: 1fr; }
+  .coin-price { font-size: 22px; }
+  .chart-wrap { height: 240px; }
+}
+
+@media (min-width: 1024px) {
+  .app { padding: 24px; }
+  .chart-wrap { height: 380px; }
+}
+
+/* iPad landscape optimization */
+@media (min-width: 1024px) and (orientation: landscape) {
+  .coins-grid { grid-template-columns: 1fr 1fr; }
+  .indicators-section { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Touch feedback */
+@media (hover: none) {
+  .coin-card:active { transform: scale(0.98); }
+  .tf-btn:active { opacity: 0.7; }
+  .icon-btn:active { transform: scale(0.9); }
+}
