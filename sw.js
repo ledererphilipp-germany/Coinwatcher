@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coinwatcher-v5';
+const CACHE_NAME = 'coinwatcher-v6';
 const STATIC_ASSETS = [
   './',
   'index.html',
@@ -28,10 +28,18 @@ self.addEventListener('activate', e => {
   );
 });
 
+const NETWORK_FIRST_HOSTS = [
+  'api.binance.com',
+  'min-api.cryptocompare.com',
+  'api.allorigins.win',
+  'api.codetabs.com',
+  'corsproxy.io',
+];
+
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  if (url.origin === 'https://api.binance.com' || url.origin === 'https://min-api.cryptocompare.com' || url.origin === 'https://api.coinstats.app') {
+  if (NETWORK_FIRST_HOSTS.includes(url.hostname)) {
     e.respondWith(
       fetch(e.request)
         .then(res => {
@@ -39,7 +47,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
           return res;
         })
-        .catch(() => caches.match(e.request))
+        .catch(() => caches.match(e.request).then(r => r || Response.error()))
     );
     return;
   }

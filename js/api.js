@@ -98,44 +98,141 @@ export async function fetchMarketChart(coinId, currency = 'eur', days = 7) {
   };
 }
 
-const NEWS_APIS = [
-  {
-    url: 'https://min-api.cryptocompare.com/data/v2/news/?categories=BTC,XRP&excludeCategories=Sponsored&lang=EN',
-    parse: data => (data.Data || []).slice(0, 10).map(item => ({
-      title: item.title,
-      body: item.body?.substring(0, 150),
-      url: item.url,
-      image: item.imageurl,
-      source: item.source_info?.name || item.source,
-      categories: item.categories?.split('|') || [],
-      publishedAt: item.published_on * 1000,
-    })),
-  },
-  {
-    url: 'https://api.coinstats.app/public/v1/news?skip=0&limit=10',
-    parse: data => (data.news || data || []).slice(0, 10).map(item => ({
-      title: item.title,
-      body: item.description?.substring(0, 150) || '',
-      url: item.link || item.url,
-      image: item.imgURL || item.imgUrl || item.thumbnail,
-      source: item.source,
-      categories: item.coins?.map(c => c.coinNameId?.toUpperCase()) || [],
-      publishedAt: new Date(item.feedDate || item.date).getTime(),
-    })),
-  },
+// ---------------------------------------------------------------------------
+// News: mehrere Quellen werden parallel abgefragt. Es genügt, wenn eine liefert.
+// ---------------------------------------------------------------------------
+
+const NEWS_TIMEOUT = 9000;
+
+// CORS-Proxies für RSS-Feeds, die keine CORS-Header senden.
+const CORS_PROXIES = [
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
 ];
 
-export async function fetchNews() {
-  for (const api of NEWS_APIS) {
+const RSS_FEEDS = [
+  { url: 'https://cointelegraph.com/rss/tag/bitcoin', source: 'Cointelegraph' },
+  { url: 'https://cointelegraph.com/rss/tag/ripple',  source: 'Cointelegraph' },
+  { url: 'https://www.coindesk.com/arc/outboundfeeds/rss/', source: 'CoinDesk' },
+  { url: 'https://decrypt.co/feed',      source: 'Decrypt' },
+  { url: 'https://bitcoinist.com/feed/', source: 'Bitcoinist' },
+  { url: 'https://www.newsbtc.com/feed/', source: 'NewsBTC' },
+];
+
+function timedFetch(url, ms = NEWS_TIMEOUT) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(t));
+}
+
+function stripHtml(html) {
+  if (!html) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return (doc.body.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+function tagsFor(text) {
+  const t = (text || '').toLowerCase();
+  const tags = [];
+  if (/\bbitcoin\b|\bbtc\b/.test(t)) tags.push('BTC');
+  if (/\bxrp\b|\bripple\b/.test(t)) tags.push('XRP');
+  return tags;
+}
+
+function parseRss(xml, sourceName) {
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  if (doc.getElementsByTagName('parsererror').length) return [];
+
+  const nodes = [...doc.getElementsByTagName('item'), ...doc.getElementsByTagName('entry')];
+  return nodes.map(node => {
+    const get = tag => node.getElementsByTagName(tag)[0]?.textContent?.trim() || '';
+
+    const title = get('title');
+    let link = get('link');
+    if (!link) link = node.getElementsByTagName('link')[0]?.getAttribute('href') || '';
+
+    const descRaw = get('description') || get('content:encoded') || get('summary');
+    const dateRaw = get('pubDate') || get('published') || get('updated') || get('dc:date');
+
+    const image =
+      node.getElementsByTagName('media:content')[0]?.getAttribute('url') ||
+      node.getElementsByTagName('media:thumbnail')[0]?.getAttribute('url') ||
+      node.getElementsByTagName('enclosure')[0]?.getAttribute('url') ||
+      descRaw.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] ||
+      '';
+
+    const body = stripHtml(descRaw).slice(0, 180);
+    const ts = Date.parse(dateRaw);
+
+    return {
+      title,
+      body,
+      url: link,
+      image,
+      source: sourceName,
+      categories: tagsFor(`${title} ${body}`),
+      publishedAt: Number.isNaN(ts) ? Date.now() : ts,
+    };
+  }).filter(i => i.title && i.url);
+}
+
+async function loadRssFeed(feed) {
+  for (const proxy of CORS_PROXIES) {
     try {
-      const res = await fetch(api.url);
+      const res = await timedFetch(proxy(feed.url));
       if (!res.ok) continue;
-      const data = await res.json();
-      const news = api.parse(data);
-      if (news.length > 0) return news;
+      const xml = await res.text();
+      const items = parseRss(xml, feed.source);
+      if (items.length) return items;
     } catch {}
   }
   return [];
+}
+
+async function loadCryptoCompare() {
+  const res = await timedFetch(
+    'https://min-api.cryptocompare.com/data/v2/news/?categories=BTC,XRP&excludeCategories=Sponsored&lang=EN'
+  );
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  return (data.Data || []).map(item => ({
+    title: item.title,
+    body: (item.body || '').slice(0, 180),
+    url: item.url,
+    image: item.imageurl,
+    source: item.source_info?.name || item.source || 'CryptoCompare',
+    categories: tagsFor(`${item.title} ${item.categories || ''}`),
+    publishedAt: item.published_on * 1000,
+  })).filter(i => i.title && i.url);
+}
+
+export async function fetchNews() {
+  const tasks = [loadCryptoCompare(), ...RSS_FEEDS.map(loadRssFeed)];
+  const settled = await Promise.allSettled(tasks);
+
+  const all = settled
+    .filter(r => r.status === 'fulfilled' && Array.isArray(r.value))
+    .flatMap(r => r.value);
+
+  // Duplikate anhand des normalisierten Titels entfernen
+  const seen = new Set();
+  const unique = [];
+  for (const item of all) {
+    const key = item.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 60);
+    if (key && !seen.has(key)) {
+      seen.add(key);
+      unique.push(item);
+    }
+  }
+
+  // BTC/XRP-Meldungen zuerst, danach nach Aktualität
+  unique.sort((a, b) => {
+    const rel = (b.categories.length > 0) - (a.categories.length > 0);
+    return rel !== 0 ? rel : b.publishedAt - a.publishedAt;
+  });
+
+  return unique.slice(0, 12);
 }
 
 export function connectLiveUpdates(onUpdate) {

@@ -115,6 +115,10 @@ function toggleTheme() {
 }
 
 async function refresh() {
+  // News laufen unabhängig von den Marktdaten — sonst bleibt der
+  // News-Bereich hängen, sobald Binance nicht erreichbar ist.
+  refreshNews();
+
   try {
     state.loading = true;
     renderLoadingState();
@@ -133,15 +137,20 @@ async function refresh() {
     renderIndicators();
     renderInsights();
     renderLastUpdate();
-
-    fetchNews().then(renderNews).catch(() => {
-      $('#news-list').innerHTML = '<div class="news-placeholder">Nachrichten konnten nicht geladen werden.</div>';
-    });
   } catch (err) {
     state.error = err.message;
     state.loading = false;
     renderError();
   }
+}
+
+function refreshNews() {
+  fetchNews()
+    .then(renderNews)
+    .catch(() => {
+      $('#news-list').innerHTML =
+        '<div class="news-placeholder">Nachrichten konnten nicht geladen werden.</div>';
+    });
 }
 
 async function refreshChartData() {
@@ -331,26 +340,41 @@ function renderNews(news) {
       .map(c => {
         const cl = c.toUpperCase().includes('BTC') || c.toUpperCase().includes('BITCOIN') ? 'btc'
           : c.toUpperCase().includes('XRP') || c.toUpperCase().includes('RIPPLE') ? 'xrp' : '';
-        return `<span class="news-tag ${cl}">${c}</span>`;
+        return `<span class="news-tag ${cl}">${esc(c)}</span>`;
       }).join('');
 
-    const thumb = item.image
-      ? `<img class="news-thumb" src="${item.image}" alt="" loading="lazy">`
+    const thumb = safeUrl(item.image)
+      ? `<img class="news-thumb" src="${esc(item.image)}" alt="" loading="lazy" onerror="this.remove()">`
       : '';
 
-    return `<a class="news-item" href="${item.url}" target="_blank" rel="noopener">
+    return `<a class="news-item" href="${esc(safeUrl(item.url) || '#')}" target="_blank" rel="noopener noreferrer">
       ${thumb}
       <div class="news-body">
-        <div class="news-title">${item.title}</div>
-        <div class="news-snippet">${item.body || ''}</div>
+        <div class="news-title">${esc(item.title)}</div>
+        <div class="news-snippet">${esc(item.body || '')}</div>
         <div class="news-meta">
-          <span class="news-source">${item.source || ''}</span>
+          <span class="news-source">${esc(item.source || '')}</span>
           <span>${timeAgo(item.publishedAt)}</span>
         </div>
         ${tags ? `<div class="news-tags">${tags}</div>` : ''}
       </div>
     </a>`;
   }).join('');
+}
+
+// Fremde Feed-Inhalte werden per innerHTML gerendert — daher maskieren.
+function esc(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+function safeUrl(url) {
+  if (!url) return '';
+  try {
+    const u = new URL(url, location.href);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? url : '';
+  } catch { return ''; }
 }
 
 function timeAgo(ts) {
