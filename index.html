@@ -65,19 +65,19 @@
         <div class="sparkline-wrap"><canvas class="sparkline"></canvas></div>
         <div class="coin-stats">
           <div class="stat">
-            <div class="stat-label">Marktkapit.</div>
+            <div class="stat-label">Marktkapit. <span class="info-btn" data-info="Gesamtwert aller im Umlauf befindlichen Coins (Preis × Anzahl). Je höher, desto etablierter die Kryptowährung.">ⓘ</span></div>
             <div class="stat-value stat-mcap">—</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Volumen 24h</div>
+            <div class="stat-label">Volumen 24h <span class="info-btn" data-info="Wie viel in den letzten 24 Stunden gehandelt wurde. Hohes Volumen bedeutet großes Interesse am Markt.">ⓘ</span></div>
             <div class="stat-value stat-vol">—</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Hoch 24h</div>
+            <div class="stat-label">Hoch 24h <span class="info-btn" data-info="Der höchste Preis, der in den letzten 24 Stunden erreicht wurde.">ⓘ</span></div>
             <div class="stat-value stat-high">—</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Tief 24h</div>
+            <div class="stat-label">Tief 24h <span class="info-btn" data-info="Der niedrigste Preis, der in den letzten 24 Stunden erreicht wurde.">ⓘ</span></div>
             <div class="stat-value stat-low">—</div>
           </div>
         </div>
@@ -98,19 +98,19 @@
         <div class="sparkline-wrap"><canvas class="sparkline"></canvas></div>
         <div class="coin-stats">
           <div class="stat">
-            <div class="stat-label">Marktkapit.</div>
+            <div class="stat-label">Marktkapit. <span class="info-btn" data-info="Gesamtwert aller im Umlauf befindlichen Coins (Preis × Anzahl). Je höher, desto etablierter die Kryptowährung.">ⓘ</span></div>
             <div class="stat-value stat-mcap">—</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Volumen 24h</div>
+            <div class="stat-label">Volumen 24h <span class="info-btn" data-info="Wie viel in den letzten 24 Stunden gehandelt wurde. Hohes Volumen bedeutet großes Interesse am Markt.">ⓘ</span></div>
             <div class="stat-value stat-vol">—</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Hoch 24h</div>
+            <div class="stat-label">Hoch 24h <span class="info-btn" data-info="Der höchste Preis, der in den letzten 24 Stunden erreicht wurde.">ⓘ</span></div>
             <div class="stat-value stat-high">—</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Tief 24h</div>
+            <div class="stat-label">Tief 24h <span class="info-btn" data-info="Der niedrigste Preis, der in den letzten 24 Stunden erreicht wurde.">ⓘ</span></div>
             <div class="stat-value stat-low">—</div>
           </div>
         </div>
@@ -129,7 +129,7 @@
             <button class="tf-btn" data-tf="1J">1J</button>
           </div>
           <label class="sma-toggle">
-            <input type="checkbox" id="sma-toggle" checked> SMA
+            <input type="checkbox" id="sma-toggle" checked> SMA <span class="info-btn" data-info="Gleitender Durchschnitt (Simple Moving Average): Glättet den Kursverlauf, um den Trend besser zu erkennen. SMA(7) = Durchschnitt der letzten 7 Perioden, SMA(25) = der letzten 25.">ⓘ</span>
           </label>
         </div>
       </div>
@@ -144,12 +144,12 @@
 
     <section class="indicators-section">
       <div class="indicator-card">
-        <div class="indicator-title">RSI (14)</div>
+        <div class="indicator-title">RSI (14) <span class="info-btn" data-info="Relative-Stärke-Index: Misst, ob ein Coin überkauft (über 70 = teuer, evtl. Rückgang) oder überverkauft (unter 30 = günstig, evtl. Anstieg) ist. Werte dazwischen gelten als neutral.">ⓘ</span></div>
         <div class="rsi-wrap"><canvas id="rsi-canvas"></canvas></div>
         <div id="rsi-value">—</div>
       </div>
       <div class="indicator-card">
-        <div class="indicator-title">Trend</div>
+        <div class="indicator-title">Trend <span class="info-btn" data-info="Zeigt die aktuelle Kursrichtung: Aufwärtstrend = Preis steigt tendenziell, Abwärtstrend = Preis fällt tendenziell, Seitwärts = keine klare Richtung. Basiert auf gleitenden Durchschnitten (SMA).">ⓘ</span></div>
         <div id="trend-label" class="trend-label neutral">—</div>
         <div class="sma-values">
           <div class="sma-item"><span class="label">SMA(7): </span><span class="val" id="sma7-val">—</span></div>
@@ -157,11 +157,11 @@
         </div>
       </div>
       <div class="indicator-card">
-        <div class="indicator-title">MACD</div>
+        <div class="indicator-title">MACD <span class="info-btn" data-info="Vergleicht schnelle und langsame Kursdurchschnitte miteinander. Bullisch = Kaufsignal (Kurs gewinnt an Schwung), Bärisch = Verkaufssignal (Kurs verliert an Schwung).">ⓘ</span></div>
         <div id="macd-signal" class="macd-signal">—</div>
       </div>
       <div class="indicator-card">
-        <div class="indicator-title">Marktphase</div>
+        <div class="indicator-title">Marktphase <span class="info-btn" data-info="Akkumulation = Clevere Anleger kaufen ein (Kurs beginnt zu steigen). Distribution = Anleger verkaufen (Kurs beginnt zu fallen). Konsolidierung = Markt bewegt sich seitwärts, keine klare Richtung.">ⓘ</span></div>
         <div id="market-phase" class="trend-label neutral">—</div>
       </div>
     </section>
@@ -182,10 +182,45 @@
 
   </div>
 
+  <div class="info-tooltip" id="info-tooltip"></div>
+
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
+
+    (function() {
+      const tooltip = document.getElementById('info-tooltip');
+      let activeBtn = null;
+
+      document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.info-btn');
+        if (btn) {
+          e.stopPropagation();
+          if (activeBtn === btn) { closeTooltip(); return; }
+          activeBtn = btn;
+          tooltip.textContent = btn.dataset.info;
+          tooltip.classList.add('visible');
+
+          const rect = btn.getBoundingClientRect();
+          const tw = Math.min(300, window.innerWidth - 32);
+          tooltip.style.width = tw + 'px';
+
+          let left = rect.left + rect.width / 2 - tw / 2;
+          if (left < 16) left = 16;
+          if (left + tw > window.innerWidth - 16) left = window.innerWidth - 16 - tw;
+          tooltip.style.left = left + 'px';
+          tooltip.style.top = (rect.bottom + 8) + 'px';
+        } else {
+          closeTooltip();
+        }
+      });
+
+      function closeTooltip() {
+        tooltip.classList.remove('visible');
+        activeBtn = null;
+      }
+    })();
   </script>
   <script type="module" src="js/app.js"></script>
 </body>
