@@ -1,15 +1,15 @@
-const CACHE_NAME = 'coinwatcher-v2';
+const CACHE_NAME = 'coinwatcher-v3';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/css/styles.css',
-  '/js/app.js',
-  '/js/api.js',
-  '/js/charts.js',
-  '/js/indicators.js',
-  '/js/insights.js',
-  '/manifest.json',
-  '/icons/icon.svg'
+  './',
+  'index.html',
+  'css/styles.css',
+  'js/app.js',
+  'js/api.js',
+  'js/charts.js',
+  'js/indicators.js',
+  'js/insights.js',
+  'manifest.json',
+  'icons/icon.svg'
 ];
 
 self.addEventListener('install', e => {

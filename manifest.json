@@ -2,7 +2,7 @@
   "name": "Coinwatcher — Krypto-Marktanalyse",
   "short_name": "Coinwatcher",
   "description": "Marktanalyse für Bitcoin und XRP mit Trends, Indikatoren und Einblicken",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0f0f1e",
