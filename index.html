@@ -204,6 +204,7 @@
       document.addEventListener('click', function(e) {
         const btn = e.target.closest('.info-btn');
         if (btn) {
+          e.preventDefault();
           e.stopPropagation();
           if (activeBtn === btn) { closeTooltip(); return; }
           activeBtn = btn;
