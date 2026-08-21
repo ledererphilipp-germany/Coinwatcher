@@ -304,6 +304,14 @@ function renderInsights() {
   const container = $('#insights-list');
   if (!state.marketsData) return;
 
+  const coinName = COINS[state.selectedCoin] || COIN_SYMBOLS[state.selectedCoin];
+  const titleEl = document.querySelector('.insights-section .section-title');
+  if (titleEl) {
+    const infoBtn = titleEl.querySelector('.info-btn');
+    titleEl.textContent = `${coinName}-Analyse `;
+    if (infoBtn) titleEl.appendChild(infoBtn);
+  }
+
   const all = generateInsights(state.marketsData, state.chartPrices, state.indicators);
   const insights = all.filter(ins => ins.coin === state.selectedCoin);
 
@@ -332,10 +340,18 @@ function renderError() {
 function renderNews() {
   const container = $('#news-list');
   const tag = COIN_SYMBOLS[state.selectedCoin];
-  const news = (state.allNews || []).filter(item => {
+  const coinName = COINS[state.selectedCoin] || tag;
+  const titleEl = document.querySelector('.news-section .section-title');
+  if (titleEl) {
+    const infoBtn = titleEl.querySelector('.info-btn');
+    titleEl.textContent = `${coinName}-News `;
+    if (infoBtn) titleEl.appendChild(infoBtn);
+  }
+  const tagged = (state.allNews || []).filter(item => {
     const cats = (item.categories || []).map(c => c.toUpperCase());
-    return cats.includes(tag) || cats.length === 0;
+    return cats.includes(tag);
   });
+  const news = tagged.length ? tagged : (state.allNews || []);
   if (!news.length) {
     container.innerHTML = '<div class="news-placeholder">Keine Nachrichten verfügbar.</div>';
     return;
