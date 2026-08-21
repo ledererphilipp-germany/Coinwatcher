@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coinwatcher-v6';
+const CACHE_NAME = 'coinwatcher-v7';
 const STATIC_ASSETS = [
   './',
   'index.html',
@@ -9,7 +9,10 @@ const STATIC_ASSETS = [
   'js/indicators.js',
   'js/insights.js',
   'manifest.json',
-  'icons/icon.svg'
+  'icons/icon.svg',
+  'icons/apple-touch-icon.png',
+  'icons/icon-192.png',
+  'icons/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
