@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coinwatcher-v7';
+const CACHE_NAME = 'coinwatcher-v8';
 const STATIC_ASSETS = [
   './',
   'index.html',

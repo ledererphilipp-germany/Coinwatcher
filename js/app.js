@@ -13,6 +13,7 @@ let state = {
   chartPrices: {},
   chartTimestamps: {},
   indicators: {},
+  allNews: null,
   loading: true,
   error: null,
   live: false,
@@ -146,7 +147,7 @@ async function refresh() {
 
 function refreshNews() {
   fetchNews()
-    .then(renderNews)
+    .then(news => { state.allNews = news; renderNews(); })
     .catch(() => {
       $('#news-list').innerHTML =
         '<div class="news-placeholder">Nachrichten konnten nicht geladen werden.</div>';
@@ -172,6 +173,7 @@ async function loadChartData(coinId, days) {
 function selectCoin(coinId) {
   state.selectedCoin = coinId;
   $$('.coin-card').forEach(el => el.classList.toggle('active', el.dataset.coin === coinId));
+  renderNews();
   loadChartData(coinId, TIMEFRAMES[state.selectedTimeframe]).then(() => {
     renderChart();
     renderIndicators();
@@ -302,7 +304,8 @@ function renderInsights() {
   const container = $('#insights-list');
   if (!state.marketsData) return;
 
-  const insights = generateInsights(state.marketsData, state.chartPrices, state.indicators);
+  const all = generateInsights(state.marketsData, state.chartPrices, state.indicators);
+  const insights = all.filter(ins => ins.coin === state.selectedCoin);
 
   container.innerHTML = insights.map(ins => `
     <div class="insight-item ${ins.type}">
@@ -326,9 +329,14 @@ function renderError() {
   setTimeout(() => $('#error-banner').classList.remove('visible'), 8000);
 }
 
-function renderNews(news) {
+function renderNews() {
   const container = $('#news-list');
-  if (!news || !news.length) {
+  const tag = COIN_SYMBOLS[state.selectedCoin];
+  const news = (state.allNews || []).filter(item => {
+    const cats = (item.categories || []).map(c => c.toUpperCase());
+    return cats.includes(tag) || cats.length === 0;
+  });
+  if (!news.length) {
     container.innerHTML = '<div class="news-placeholder">Keine Nachrichten verfügbar.</div>';
     return;
   }
